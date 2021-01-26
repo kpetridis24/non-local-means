@@ -18,9 +18,13 @@ results. It is highly advisable to use MATLAB to print the image in order to obs
 so you can simply follow these steps:
 
 1. Move the txt file of the denoised image to your matlab workspace-directory
+
 2. Type  a) Ifilt = dlmread('denoised.txt');
+
          b) save('denoised.mat', 'Ifilt');
+         
          c) load('denoised.mat');
+         
          d) imshow(Ifilt, []);
          
 3. The denoised image should appear on your screen.
