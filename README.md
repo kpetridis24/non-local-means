@@ -19,7 +19,9 @@ so you can simply follow these steps:
 
 1. Move the txt file of the denoised image to your matlab workspace-directory
 
-2. Type  a) Ifilt = dlmread('denoised.txt');
+2. Type:
+         
+         a) Ifilt = dlmread('denoised.txt');
 
          b) save('denoised.mat', 'Ifilt');
          
