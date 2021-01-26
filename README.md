@@ -31,3 +31,13 @@ so you can simply follow these steps:
          
 3. The denoised image should appear on your screen.
 
+
+~ CUDA implementation ~
+
+The default complexity for the Non-Local-Means is O(n^4) so i implemented it in CUDA which dropped the complexity to the minimum of O(n^2).
+In order to experiment with the cuda implementation if you don't own a NVIDIA GPU you could run the code in "Google Colab". You can check out the
+instructions here https://www.geeksforgeeks.org/how-to-run-cuda-c-c-on-jupyter-notebook-in-google-colaboratory/  and have fun with the code!
+
+
+
+
