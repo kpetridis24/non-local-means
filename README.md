@@ -5,10 +5,12 @@ Filters gaussian noise in image, with non-local-means algorithm
 
 The central idea of the algorithm is that, given a noisy image "Im", we can assume that the non-noised image "If" is basically a weighted average of all the pixels
 from the initial image "Im". Specifically my function implements this theory using the following equation: If(x) = SUM{ w(x)(y) * Im(y) } where w(x)(y) denotes a 
-weight that represents the similarity between two neighborhouds of NxN pixels each (patches of the image). We have w(x)(y) = 1/Z(x) * exp{ -|| P(Nx)-P(Ny) ||^2 / sigma^2 }
-where P(Nx) is a neighborhoud with central pixel "x" and Z is the normalization factor. So the algorithm calculates the Euclidean distance of all patches from all the others.
-The distance essentially represents the level of similarity between the two neighborhouds (small distance means similar tone of black thus similar color). For more informations
-about the algorithm i highly suggest to visit https://www.csd.uoc.gr/~hy371/bibliography/Non-localMeans.pdf which analyzes in detail everything that my code is base on.
+weight that represents the similarity between two neighborhouds of NxN pixels each (patches of the image). We have 
+w(x)(y) = 1/Z(x) * exp{ -|| P(Nx)-P(Ny) ||^2 / sigma^2 }where P(Nx) is a neighborhoud with central pixel "x" and Z is 
+the normalization factor. So the algorithm calculates the Euclidean distance of all patches from all the others.
+The distance essentially represents the level of similarity between the two neighborhouds (small distance means similar 
+tone of black thus similar color). For more informationsabout the algorithm i highly suggest to 
+visit https://www.csd.uoc.gr/~hy371/bibliography/Non-localMeans.pdf which analyzes in detail everything that my code is base on.
 
 ~ Sequential code ~
 
