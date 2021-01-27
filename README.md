@@ -9,8 +9,8 @@ weight that represents the similarity between two neighborhouds of NxN pixels ea
 w(x)(y) = 1/Z(x) * exp{ -|| P(Nx)-P(Ny) ||^2 / sigma^2 }where P(Nx) is a neighborhoud with central pixel "x" and Z is 
 the normalization factor. So the algorithm calculates the Euclidean distance of all patches from all the others.
 The distance essentially represents the level of similarity between the two neighborhouds (small distance means similar 
-tone of black thus similar color). For more informationsabout the algorithm i highly suggest to 
-visit https://www.csd.uoc.gr/~hy371/bibliography/Non-localMeans.pdf which analyzes in detail everything that my code is base on.
+tone of black thus similar color). For more informations about the algorithm i highly suggest to 
+visit https://www.csd.uoc.gr/~hy371/bibliography/Non-localMeans.pdf which analyzes in detail everything that my code is based on.
 
 ~ Sequential code ~
 
