@@ -16,7 +16,7 @@ visit https://www.csd.uoc.gr/~hy371/bibliography/Non-localMeans.pdf which analyz
 
 After it reads the image from file "house.txt", it uses the "addNoise" function to add Gaussian noise to all the image pixels. The "Non-Local-Means" algorithm
 filters the added noise and returns the image with much higher resolution. You can experiment with different values of SIGMA (variance), and see which delivers the best 
-results. It is highly advisable to use MATLAB to print the image in order to observe the results of the algorithm. I have included functions that write to txt file 
+results. It is highly advisable to use MATLAB to display the image in order to observe the results of the algorithm. I have included functions that write to txt file 
 so you can simply follow these steps:
 
 1. Move the txt file of the denoised image to your matlab workspace-directory
