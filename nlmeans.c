@@ -14,10 +14,9 @@ void     writeFile(double**A, char* filename, int rowSize, int colSize);
 double** oneDim2twoDim(double* A, int len);
 double*  twoDim2oneDim(double** A, int len);
 void     printArray(double **A, double *B, int len, int dim);
-double** GaussianKernel(int krnl_sz, double sigma);
-double*  findPatches(double** Im, int imageSize, int patchSize);
-double** nlmeans_Wgt(double** Im, int imSize, int ptSize, double imSgm, double ptSgm);
-double** NonLocalMeans(double** Im, int imSize, int ptSize, double imSgm, double ptSgm);
+double*  GaussianKernel(int krnl_sz, double sigma);
+double*  findPatch(double* Im, int imSize, int row, int col, int ptSize);
+double** NonLocalMeans(double* Im, int imSize, int ptSize, double imSgm, double ptSgm);
 
 
 void main(int argc, char** argv){
@@ -31,115 +30,102 @@ void main(int argc, char** argv){
     double** Im     = readFile("house.txt", image_sz, image_sz);
     double*  Im2    = twoDim2oneDim(Im, image_sz);
     double*  noise  = addNoise(Im2, image_sz*image_sz);
-    double** noise2 = oneDim2twoDim(noise, image_sz);
-    double** If     = NonLocalMeans(noise2, image_sz, patch_sz, sigma, patch_sgm);
+    double** If     = NonLocalMeans(noise, 64, 5, sigma, patch_sgm);
     writeFile(If, "denoise.txt", 64, 64);
 }
 
 
-/* Non-Local-Means denoising */
-double** NonLocalMeans(double** nIm, int imSize, int ptSize, double imSgm, double ptSgm){
+/* Returns patch of the pixel(row,col) */
+double* findPatch(double* Im, int imSize, int row, int col, int ptSize){
 
-    int len = pow( imSize, 2 );
-    double*  If = (double *)calloc(len , sizeof(double));
-    double** W  = nlmeans_Wgt(nIm, imSize, ptSize, imSgm, ptSgm);
+    double* patch = (double *)malloc(pow( ptSize, 2 ) * sizeof(double));
+    int r, r2, c, c2, cnt = 0, range = (ptSize - 1) / 2;
 
-    double* Im = twoDim2oneDim(nIm, imSize);
-  
-    for(int i = 0; i < len; i++)
-        for(int j = 0; j < len; j++)
+    for(r=row-range, r2=0; r2 < ptSize; r++, r2++)
+        for(c=col-range, c2=0; c2 < ptSize; c++, c2++)
         { 
-            If[i] += W[i][j] * Im[j];
-        }
-
-    double** denImage = oneDim2twoDim(If, imSize);
-    return denImage;
-}
-
-
-/* Calculates the NLMeans Weight Array */
-double** nlmeans_Wgt(double** Im, int imSize, int ptSize, double imSgm, double ptSgm){
-
-    double x, x2, tmp, D = 0;
-    int i2 = 0, j3 = 0,
-        size = pow( imSize, 2 ),
-        len  = pow( ptSize, 2 );
-        
-    double** W        = (double **)malloc(size * sizeof(double *));
-    double*  normZ    = (double  *)malloc(size * sizeof(double *));
-    double** ptWeight = GaussianKernel(ptSize, ptSgm);
-    double*  patch    = findPatches(Im, imSize, ptSize);
-    for(int i = 0; i < size; i++) 
-        W[i] = malloc(size * sizeof(double));
-
-    for(int e = 0; e < size; e++)
-        for(int i = 0; i < size; i++)
-        {
-            for(int j=i*len, j2=0; j < i*len+len; j++, j2++)
-            {  
-                if(j3 == ptSize){
-                    i2 ++;
-                    j3 = 0;
-                }
-                if(i2 == ptSize) i2 = 0;
-        
-                x  = patch[e*len+j2];                   
-                x2 = patch[j];
-                if(x != 0 && x2 != 0)
-                {   
-                    tmp = pow( (x-x2), 2 );         
-                    tmp *= ptWeight[i2][j3];   
-                    D   += tmp;  
-                }
-                j3++;          
-            }
-
-            D = exp( (-D) / pow(imSgm, 2) );
-            W[e][i]  = D;
-            normZ[e] += D;
-            D = 0;
-        }
-
-    for(int z = 0; z < size; z++)
-        for(int v = 0; v < size; v++)
-            W[z][v] /= normZ[z];
-    
-    return W;
-}
-
-
-/* Returns all overlapping patches in 1-D array */
-double* findPatches(double** Im, int imageSize, int patchSize){
-    
-    int size = pow( imageSize, 2 ) * pow( patchSize, 2 );
-    double* patch = malloc(size * sizeof(double));
-    int r, r2, c, c2, cnt = 0, range = (patchSize - 1) / 2;
-
-    for(int i = 0; i < imageSize; i++)
-        for(int j = 0; j < imageSize; j++)
-        {   
-            for(r=i-range, r2=0; r2 < patchSize; r++, r2++)
-                for(c=j-range, c2=0; c2 < patchSize; c++, c2++)
-                { 
-                    if((r >= imageSize) || (c >= imageSize)) patch[cnt++] = 0;
-                    else if(r < 0  || c < 0) patch[cnt++] = 0;
-                    else if(r >= 0 || c >= 0) patch[cnt++] = Im[r][c];
-                }
+            if((r >= imSize) || (c >= imSize)) patch[cnt++] = 0;
+            else if(r < 0  || c < 0) patch[cnt++] = 0;
+            else if(r >= 0 || c >= 0) patch[cnt++] = Im[r*imSize+c];
         }
 
     return patch;
 }
 
 
-/* Calculates spacial-gaussian weight */
-double** GaussianKernel(int krnl_sz, double sigma){
+/* Image denoising */
+double** NonLocalMeans(double* Im, int imSize, int ptSize, double imSgm, double ptSgm){
 
-    double **W = (double **)malloc(krnl_sz * sizeof(double *)),
-             x, y, d,
-             sum = 0.0,
-             c   = 2 * pow( sigma, 2 );
-    for(int i = 0; i < krnl_sz; i++) 
-        W[i] = malloc(krnl_sz * sizeof(double));
+    double x, x2, tmp, D=0, normZ=0;
+    int h1=0, h2=0, h3=0, h4=0,
+        size = pow( imSize, 2 ),
+        len  = pow( ptSize, 2 );
+    
+    double*  ptWeight = GaussianKernel(ptSize, ptSgm);
+    double*  W        = (double *)malloc(size * sizeof(double));
+    double*  If       = (double *)malloc(size * sizeof(double));
+    double*  patch1   = (double *)malloc(len  * sizeof(double));  
+    double*  patch2   = (double *)malloc(len  * sizeof(double));
+
+    
+    for(int e = 0; e < size; e++)
+    {   
+        if(h2 == imSize){
+            h2 = 0;
+            h1 ++;
+        }
+        if(h1 == imSize) h1 = 0;
+        patch1 = findPatch(Im, imSize, h1, h2, ptSize);
+        h2++;
+
+        for(int i = 0; i < size; i++)
+        {   
+            if(h4 == imSize){
+                h4 = 0;
+                h3 ++;
+            }
+            if(h3 == imSize) h3 = 0;
+            patch2 = findPatch(Im, imSize, h3, h4, ptSize);
+            h4++;
+            
+            for(int p = 0; p < ptSize; p++)
+                for(int p2 = 0; p2 < ptSize; p2++)
+                {
+                    x  = patch1[p*ptSize+p2];
+                    x2 = patch2[p*ptSize+p2];
+                    if(x != 0 && x2 != 0)
+                    {  
+                        tmp = pow( (x-x2), 2 );       
+                        tmp *= ptWeight[p*ptSize+p2];  
+                        D   += tmp;  
+                    }
+                }
+    
+            D  = exp( (-D) / pow(imSgm, 2) );
+            W[i] = D;
+            normZ += D;
+            D = 0;
+        }
+     
+        for(int v = 0; v < size; v++)
+        {
+            W[v] /= normZ;
+            If[e] += W[v] * Im[v];
+        }
+        normZ = 0;
+    }
+
+    double** Ifilt = oneDim2twoDim(If, imSize);
+    return Ifilt;
+}
+
+
+/* Calculates spacial-gaussian weight */
+double* GaussianKernel(int krnl_sz, double sigma){
+
+    double *W = (double *)malloc(pow( krnl_sz, 2 ) * sizeof(double)),
+             x, y, d, sum = 0.0,
+             c = 2 * pow( sigma, 2 );
 
     for(int i = 0; i < krnl_sz; i++)
         for(int j = 0; j < krnl_sz; j++)
@@ -147,8 +133,8 @@ double** GaussianKernel(int krnl_sz, double sigma){
             x = i - (krnl_sz - 1) / 2.0;
             y = j - (krnl_sz - 1) / 2.0;
             d = x * x + y * y;
-            W[i][j] = exp( -(d) / c ) / (M_PI * c);
-            sum += W[i][j];
+            W[i*krnl_sz+j] = exp( -(d) / c ) / (M_PI * c);
+            sum += W[i*krnl_sz+j];
         }
 
     double max[krnl_sz];
@@ -157,15 +143,15 @@ double** GaussianKernel(int krnl_sz, double sigma){
     for(i = 0, max[i] = 0; i < krnl_sz; i++)
         for(int j = 0; j < krnl_sz; j++)
         {
-            W[i][j] /= sum;
-            if(j==0) max[i] = W[i][j];
-            else if(W[i][j] > max[i]) 
-                max[i] = W[i][j]; 
+            W[i*krnl_sz+j] /= sum;
+            if(j==0) max[i] = W[i*krnl_sz+j];
+            else if(W[i*krnl_sz+j] > max[i]) 
+                max[i] = W[i*krnl_sz+j]; 
         }
 
     for(int i = 0; i < krnl_sz; i++)
         for(int j = 0; j < krnl_sz; j++)
-            W[i][j] /= max[i];
+            W[i*krnl_sz+j] /= max[i];
 
     return W;
 }
@@ -251,7 +237,7 @@ void writeFile(double**A, char* filename, int rowSize, int colSize){
 /* 2-D random matrix */
 double** createMatrix(int row, int col){
 
-    srand(time( NULL ));
+    //srand(time( NULL ));
     double** mat = (double **)malloc(row * sizeof(double));
     for(int i=0; i<row; i++) mat[i] = malloc(col * sizeof(double));
 
