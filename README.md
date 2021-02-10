@@ -27,9 +27,8 @@ so you can simply follow these steps:
 
          b) save('denoised.mat', 'Ifilt');
          
-         c) load('denoised.mat');
+         c) imshow(Ifilt, []);
          
-         d) imshow(Ifilt, []);
          
 3. The denoised image should appear on your screen.
 
