@@ -29,9 +29,9 @@ __global__ void NonLocalMeans(double* Im, int imSize, double imSigma, double* pa
         len  = pow( ptSize, 2 ),
         id   = threadIdx.x + blockDim.x * blockIdx.x;
 
-    for(int i = 0; i < size; i++)
+    for(int i = 0; i < size; i++)  
     {
-        for(int j=i*len, j2=0; j < i*len+len; j++, j2++)
+        for(int j=i*len, j2=0; j < i*len+len; j++, j2++)  /* This loop checks every time, a different patch from the patches-list */
         {  
             if(j3 == ptSize){
                 i2 ++;
@@ -62,6 +62,7 @@ __global__ void NonLocalMeans(double* Im, int imSize, double imSigma, double* pa
 }
 
 
+/* Returns all the patches layed into a vector */
 __global__ void findPatches(double* Im, double* patch, int imageSize,
                                         int patchSize){
     
